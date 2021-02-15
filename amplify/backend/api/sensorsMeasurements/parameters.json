@@ -1,0 +1,11 @@
+{
+  "AppSyncApiName": "sensorsMeasurements",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authhappyherbsamplifyd544305a",
+      "Outputs.UserPoolId"
+    ]
+  }
+}

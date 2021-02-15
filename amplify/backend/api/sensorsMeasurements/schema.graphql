@@ -1,0 +1,7 @@
+type SensorsMeasurement @model @key(fields: ["thingsName", "timestamp"]) {
+  thingsName: String!
+  timestamp: Int!
+  luxBH1750: Float!
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
