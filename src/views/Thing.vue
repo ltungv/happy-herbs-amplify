@@ -64,7 +64,8 @@ export default {
         }
       },
       isUpdatingThingShadow: false,
-      amplifyPubSubHasError: false
+      amplifyPubSubHasError: false,
+      intervalPublishShadowGet: undefined
     };
   },
   created() {
@@ -72,16 +73,18 @@ export default {
   },
   beforeMount() {
     this.subscribeAllTopics();
+
     setTimeout(async () => {
       this.publishShadowGet();
     }, 3000);
-    setInterval(async () => {
+
+    this.intervalPublishShadowGet = setInterval(async () => {
       this.publishShadowGet();
     }, 30000);
   },
   beforeDestroy() {
     this.unsubscribeAllTopics();
-    clearInterval();
+    clearInterval(this.intervalPublishShadowGet);
   },
   methods: {
     async refreshConnection() {
