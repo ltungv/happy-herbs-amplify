@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <v-container fluid v-if="!isLoadingInitialThingShadow">
     <v-row>
       <v-col>
         <span class="text-h2">{{ thingName }}</span>
@@ -43,6 +43,7 @@
       </v-col>
     </v-row>
   </v-container>
+  <v-progress-linear v-else indeterminate></v-progress-linear>
 </template>
 
 <script>
@@ -66,6 +67,7 @@ export default {
         }
       },
       // DISPLAY CONTROLS
+      isLoadingInitialThingShadow: true,
       isUpdatingThingShadow: false,
       amplifyPubSubHasError: false,
       // INTERVALS
@@ -150,8 +152,7 @@ export default {
        * are usually used for updating our local data
        */
       this.acceptedShadowGetAndUpdateSubscriber = PubSub.subscribe([
-        "$aws/things/" + this.thingName + "/shadow/update/accepted",
-        "$aws/things/" + this.thingName + "/shadow/get/accepted"
+        "$aws/things/" + this.thingName + "/shadow/update/accepted"
       ]).subscribe({
         next: data => {
           if (this.isUpdatingThingShadow) {
@@ -167,6 +168,27 @@ export default {
               this.thingShadow.reported[k] = v;
             });
           }
+        },
+        error: () => {
+          this.amplifyPubSubHasError = true;
+        }
+      });
+
+      this.acceptedShadowGetAndUpdateSubscriber = PubSub.subscribe([
+        "$aws/things/" + this.thingName + "/shadow/get/accepted"
+      ]).subscribe({
+        next: data => {
+          if (this.isLoadingInitialThingShadow) {
+            this.isLoadingInitialThingShadow = false;
+          }
+
+          Object.entries(data.value.state.desired).forEach(([k, v]) => {
+            this.thingShadow.desired[k] = v;
+          });
+
+          Object.entries(data.value.state.reported).forEach(([k, v]) => {
+            this.thingShadow.reported[k] = v;
+          });
         },
         error: () => {
           this.amplifyPubSubHasError = true;

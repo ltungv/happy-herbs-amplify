@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid v-if="!isLoadingSensorsMeasurements">
+  <v-container fluid v-if="!isLoadingInitialSensorsMeasurements">
     <v-row
       v-for="{ thingName, lightMeter } in this.sensorsChartData"
       :key="thingName"
@@ -28,7 +28,7 @@ export default {
   data() {
     return {
       intervalLoadSensorsMeasurements: undefined,
-      isLoadingSensorsMeasurements: true,
+      isLoadingInitialSensorsMeasurements: true,
       // sensorsMeasurements contains measured valued of all the sensors in every existing MCUs
       sensorsMeasurements: [],
       sensorsChartOpts: {
@@ -80,7 +80,7 @@ export default {
      */
     setTimeout(async () => {
       await this.populateSensorsMeasurements();
-      this.isLoadingSensorsMeasurements = false;
+      this.isLoadingInitialSensorsMeasurements = false;
     }, 3000);
 
     /**
