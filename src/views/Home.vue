@@ -1,12 +1,20 @@
 <template>
-  <v-container fluid>
-    <SimpleLineChart
-      :width="420"
-      :height="420"
-      :chartData="lightMeterChartData"
-      :chartOptions="lightMeterChartOptions"
-    ></SimpleLineChart>
+  <v-container fluid v-if="!isLoadingSensorsMeasurements">
+    <v-row
+      v-for="{ thingName, lightMeter } in this.sensorsChartData"
+      :key="thingName"
+    >
+      <v-col>
+        <SimpleLineChart
+          :width="420"
+          :height="420"
+          :chartData="lightMeter"
+          :chartOptions="sensorsChartOpts"
+        ></SimpleLineChart>
+      </v-col>
+    </v-row>
   </v-container>
+  <v-progress-linear v-else indeterminate></v-progress-linear>
 </template>
 
 <script>
@@ -17,24 +25,13 @@ import SimpleLineChart from "../components/SimpleLineChart";
 export default {
   name: "Home",
   components: { SimpleLineChart },
-  computed: {
-    lightMeterChartData() {
-      return {
-        labels: this.sensorsMeasurements.map(m => new Date(m.timestamp * 1000)),
-        datasets: [
-          {
-            label: "BH1750 (lux)",
-            backgroundColor: "yellow",
-            data: this.sensorsMeasurements.map(m => m.luxBH1750)
-          }
-        ]
-      };
-    }
-  },
   data() {
     return {
+      intervalLoadSensorsMeasurements: undefined,
+      isLoadingSensorsMeasurements: true,
+      // sensorsMeasurements contains measured valued of all the sensors in every existing MCUs
       sensorsMeasurements: [],
-      lightMeterChartOptions: {
+      sensorsChartOpts: {
         responsive: false,
         maintainAspectRatio: false,
         scales: {
@@ -50,25 +47,78 @@ export default {
       }
     };
   },
-  async beforeMount() {
-    await this.populateSensorsMeasurements();
+  computed: {
+    /**
+     * Map the sensors' measurements received into datasets that can be read by chartjs
+     */
+    sensorsChartData() {
+      return this.sensorsMeasurements.map((measurements, thingIdx) => ({
+        thingName: this.things[thingIdx].thingName,
+        lightMeter: {
+          labels: measurements.map(m => new Date(m.timestamp * 1000)),
+          datasets: [
+            {
+              label: "BH1750 (lux)",
+              backgroundColor: "yellow",
+              data: measurements.map(m => m.luxBH1750)
+            }
+          ]
+        }
+      }));
+    },
+
+    /**
+     * Information about all the existing MCUs
+     */
+    things() {
+      return this.$store.getters.awsIotThings;
+    }
+  },
+  beforeMount() {
+    /**
+     * Wait for 3 seconds and query the data using GraphQL for sensors' measurements
+     */
+    setTimeout(async () => {
+      await this.populateSensorsMeasurements();
+      this.isLoadingSensorsMeasurements = false;
+    }, 3000);
+
+    /**
+     * For every 30 seconds and query the data using GraphQL for sensors' measurements
+     */
+    this.intervalLoadSensorsMeasurements = setInterval(async () => {
+      this.populateSensorsMeasurements();
+    }, 30000);
+  },
+  beforeDestroy() {
+    clearInterval(this.intervalLoadSensorsMeasurements);
   },
   methods: {
+    /**
+     * Query the database using GraphQL for sensors' measurements from every existing MCU.
+     * The data is filter for a range of time up until now
+     */
     async populateSensorsMeasurements() {
       const currentTimestamp = Math.round(new Date().getTime() / 1000);
       try {
-        const response = await API.graphql(
-          graphqlOperation(listSensorsMeasurements, {
-            thingsName: "test-plant-module-01",
-            timestamp: {
-              ge: currentTimestamp - 24 * 60 * 60
-            },
-            sortDirection: "DESC"
+        const responses = await Promise.all(
+          this.things.map(({ thingName }) => {
+            return API.graphql(
+              graphqlOperation(listSensorsMeasurements, {
+                thingsName: thingName,
+                timestamp: {
+                  ge: currentTimestamp - 24 * 60 * 60 // 1 DAY
+                },
+                sortDirection: "DESC" // LATEST FIRST
+              })
+            );
           })
         );
-        this.sensorsMeasurements = response.data.listSensorsMeasurements.items;
+        this.sensorsMeasurements = responses.map(
+          res => res.data.listSensorsMeasurements.items
+        );
       } catch (err) {
-        console.error("Could not populate sensors' measurements ", err);
+        console.log(err);
       }
     }
   }
