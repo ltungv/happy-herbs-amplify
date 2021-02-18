@@ -52,8 +52,10 @@ export default {
   name: "Thing",
   data() {
     return {
+      // MQTT SUBSCRIBERS
       acceptedShadowGetAndUpdateSubscriber: undefined,
       rejectedShadowUpdateSubscriber: undefined,
+      // THING'S STATE
       thingName: undefined,
       thingShadow: {
         desired: {
@@ -63,8 +65,10 @@ export default {
           lampState: false
         }
       },
+      // DISPLAY CONTROLS
       isUpdatingThingShadow: false,
       amplifyPubSubHasError: false,
+      // INTERVALS
       intervalPublishShadowGet: undefined
     };
   },
@@ -74,10 +78,16 @@ export default {
   beforeMount() {
     this.subscribeAllTopics();
 
+    /**
+     * Query shadow after 3 seconds
+     */
     setTimeout(async () => {
       this.publishShadowGet();
     }, 3000);
 
+    /**
+     * Query shadow every 30 seconds
+     */
     this.intervalPublishShadowGet = setInterval(async () => {
       this.publishShadowGet();
     }, 30000);
@@ -87,6 +97,9 @@ export default {
     clearInterval(this.intervalPublishShadowGet);
   },
   methods: {
+    /**
+     * Disconnect and start a new connection with AWS
+     */
     async refreshConnection() {
       this.isUpdatingThingShadow = false;
       this.amplifyPubSubHasError = false;
@@ -94,6 +107,10 @@ export default {
       this.subscribeAllTopics();
       this.publishShadowGet();
     },
+
+    /**
+     * Publish the desired lamp state
+     */
     async publishShadowUpdateLampToggle() {
       this.isUpdatingThingShadow = true;
       this.publishShadowUpdate({
@@ -102,6 +119,10 @@ export default {
         }
       });
     },
+
+    /**
+     * Publish the shadow state to the update topic
+     */
     async publishShadowUpdate(state) {
       try {
         PubSub.publish(`$aws/things/${this.thingName}/shadow/update`, {
@@ -111,6 +132,10 @@ export default {
         console.error("Could not publish shadow update request ", err);
       }
     },
+
+    /**
+     * Publish an empty message to the shadow get topic
+     */
     async publishShadowGet() {
       try {
         PubSub.publish(`$aws/things/${this.thingName}/shadow/get`, {});
@@ -118,7 +143,12 @@ export default {
         console.error("Could not publish shadow get request ", err);
       }
     },
+
     subscribeAllTopics() {
+      /**
+       * These topics report the current state of the shadow, data recevied from these topics
+       * are usually used for updating our local data
+       */
       this.acceptedShadowGetAndUpdateSubscriber = PubSub.subscribe([
         "$aws/things/" + this.thingName + "/shadow/update/accepted",
         "$aws/things/" + this.thingName + "/shadow/get/accepted"
@@ -127,12 +157,12 @@ export default {
           if (this.isUpdatingThingShadow) {
             this.isUpdatingThingShadow = false;
           }
-          if (data.value.state.desired) {
+          if (data.value.state.desired != undefined) {
             Object.entries(data.value.state.desired).forEach(([k, v]) => {
               this.thingShadow.desired[k] = v;
             });
           }
-          if (data.value.state.reported) {
+          if (data.value.state.reported != undefined) {
             Object.entries(data.value.state.reported).forEach(([k, v]) => {
               this.thingShadow.reported[k] = v;
             });
@@ -143,6 +173,9 @@ export default {
         }
       });
 
+      /**
+       * These topics report errors
+       */
       this.rejectedShadowUpdateSubscriber = PubSub.subscribe(
         "$aws/things/" + this.thingName + "/shadow/update/rejected"
       ).subscribe({
@@ -156,6 +189,7 @@ export default {
         }
       });
     },
+
     unsubscribeAllTopics() {
       if (this.acceptedShadowGetAndUpdateSuscriber) {
         this.acceptedShadowGetAndUpdateSuscriber.unsubscribe();
