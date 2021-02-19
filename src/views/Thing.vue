@@ -57,7 +57,6 @@ export default {
       acceptedShadowGetAndUpdateSubscriber: undefined,
       rejectedShadowUpdateSubscriber: undefined,
       // THING'S STATE
-      thingName: undefined,
       thingShadow: {
         desired: {
           lampState: false
@@ -74,8 +73,10 @@ export default {
       intervalPublishShadowGet: undefined
     };
   },
-  created() {
-    this.thingName = this.$route.params.thingName;
+  computed: {
+    thingName() {
+      return this.$route.params.thingName;
+    }
   },
   beforeMount() {
     this.subscribeAllTopics();
