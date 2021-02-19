@@ -10,6 +10,8 @@ export const createSensorsMeasurement = /* GraphQL */ `
       thingsName
       timestamp
       luxBH1750
+      temperature
+      humidity
       createdAt
       updatedAt
     }
@@ -24,6 +26,8 @@ export const updateSensorsMeasurement = /* GraphQL */ `
       thingsName
       timestamp
       luxBH1750
+      temperature
+      humidity
       createdAt
       updatedAt
     }
@@ -38,6 +42,8 @@ export const deleteSensorsMeasurement = /* GraphQL */ `
       thingsName
       timestamp
       luxBH1750
+      temperature
+      humidity
       createdAt
       updatedAt
     }
