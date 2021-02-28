@@ -45,11 +45,16 @@
 
     <v-row>
       <v-col>
-         <v-card>
+        <v-card>
           <v-card-title>Pump status</v-card-title>
           <v-card-subtitle>
             Reported state:
-            <span>{{ thingShadow.reported.moistureThreshold}}</span>
+            <span class="green--text" v-if="thingShadow.reported.pumpState"
+              >ON</span
+            >
+            <span class="red--text" v-if="!thingShadow.reported.pumpState"
+              >OFF</span
+            >
           </v-card-subtitle>
 
           <v-card-actions>
@@ -69,17 +74,19 @@
     <v-row>
       <v-col>
         <v-card>
-          <v-card-title>Light Threshold status</v-card-title>
+          <v-card-title>Light threshold</v-card-title>
           <v-card-subtitle>
-            Reported state:
-            <span>{{ thingShadow.reported.lightThreshold}}</span>
+            Reported threshold:
+            <span class="green--text">{{
+              thingShadow.reported.lightThreshold
+            }}</span>
           </v-card-subtitle>
 
           <v-card-actions>
             <v-text-field
               v-on:keyup.enter="publishShadowUpdateLightThreshold"
               v-model.number="thingShadow.desired.lightThreshold"
-              >
+            >
             </v-text-field>
           </v-card-actions>
         </v-card>
@@ -89,17 +96,19 @@
     <v-row>
       <v-col>
         <v-card>
-          <v-card-title>Moisture Threshold status</v-card-title>
+          <v-card-title>Moisture threshold</v-card-title>
           <v-card-subtitle>
-            Reported state:
-            <span>{{ thingShadow.reported.moistureThreshold }}</span>
+            Reported threshold:
+            <span class="green--text">{{
+              thingShadow.reported.moistureThreshold
+            }}</span>
           </v-card-subtitle>
 
           <v-card-actions>
             <v-text-field
               v-on:keyup.enter="publishShadowUpdateMoistureThreshold"
               v-model.number="thingShadow.desired.moistureThreshold"
-              >
+            >
             </v-text-field>
           </v-card-actions>
         </v-card>
@@ -134,8 +143,7 @@ export default {
           moistureThreshold: 0
         }
       },
-      
-      
+
       // DISPLAY CONTROLS
       isLoadingInitialThingShadow: true,
       isUpdatingThingShadow: false,
