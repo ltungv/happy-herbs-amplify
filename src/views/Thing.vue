@@ -42,6 +42,69 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <v-row>
+      <v-col>
+         <v-card>
+          <v-card-title>Pump status</v-card-title>
+          <v-card-subtitle>
+            Reported state:
+            <span>{{ thingShadow.reported.moistureThreshold}}</span>
+          </v-card-subtitle>
+
+          <v-card-actions>
+            <v-btn
+              :loading="isUpdatingThingShadow"
+              color="secondary"
+              @click="publishShadowUpdatePumpToggle"
+            >
+              <span v-if="thingShadow.desired.pumpState">Turn off</span>
+              <span v-if="!thingShadow.desired.pumpState">Turn on</span>
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col>
+        <v-card>
+          <v-card-title>Light Threshold status</v-card-title>
+          <v-card-subtitle>
+            Reported state:
+            <span>{{ thingShadow.reported.lightThreshold}}</span>
+          </v-card-subtitle>
+
+          <v-card-actions>
+            <v-text-field
+              v-on:keyup.enter="publishShadowUpdateLightThreshold"
+              v-model.number="thingShadow.desired.lightThreshold"
+              >
+            </v-text-field>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col>
+        <v-card>
+          <v-card-title>Moisture Threshold status</v-card-title>
+          <v-card-subtitle>
+            Reported state:
+            <span>{{ thingShadow.reported.moistureThreshold }}</span>
+          </v-card-subtitle>
+
+          <v-card-actions>
+            <v-text-field
+              v-on:keyup.enter="publishShadowUpdateMoistureThreshold"
+              v-model.number="thingShadow.desired.moistureThreshold"
+              >
+            </v-text-field>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
   </v-container>
   <v-progress-linear v-else indeterminate></v-progress-linear>
 </template>
@@ -59,12 +122,20 @@ export default {
       // THING'S STATE
       thingShadow: {
         desired: {
-          lampState: false
+          lampState: false,
+          pumpState: false,
+          lightThreshold: 0,
+          moistureThreshold: 0
         },
         reported: {
-          lampState: false
+          lampState: false,
+          pumpState: false,
+          lightThreshold: 0,
+          moistureThreshold: 0
         }
       },
+      
+      
       // DISPLAY CONTROLS
       isLoadingInitialThingShadow: true,
       isUpdatingThingShadow: false,
@@ -119,6 +190,33 @@ export default {
       this.publishShadowUpdate({
         desired: {
           lampState: !this.thingShadow.desired.lampState
+        }
+      });
+    },
+
+    async publishShadowUpdatePumpToggle() {
+      this.isUpdatingThingShadow = true;
+      this.publishShadowUpdate({
+        desired: {
+          pumpState: !this.thingShadow.desired.pumpState
+        }
+      });
+    },
+
+    async publishShadowUpdateLightThreshold() {
+      this.isUpdatingThingShadow = true;
+      this.publishShadowUpdate({
+        desired: {
+          lightThreshold: this.thingShadow.desired.lightThreshold
+        }
+      });
+    },
+
+    async publishShadowUpdateMoistureThreshold() {
+      this.isUpdatingThingShadow = true;
+      this.publishShadowUpdate({
+        desired: {
+          moistureThreshold: this.thingShadow.desired.moistureThreshold
         }
       });
     },
