@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid v-if="!isLoadingInitialThingShadow">
+  <v-container v-if="!isLoadingInitialThingShadow">
     <v-row>
       <v-col>
         <span class="text-h2">{{ thingName }}</span>
