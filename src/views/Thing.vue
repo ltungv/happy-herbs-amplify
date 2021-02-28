@@ -218,7 +218,6 @@ export default {
     },
 
     async publishShadowUpdateMoistureThreshold() {
-      console.log("Updating moisture threshold");
       this.isUpdatingThingShadow = true;
       this.publishShadowUpdate({
         desired: {
