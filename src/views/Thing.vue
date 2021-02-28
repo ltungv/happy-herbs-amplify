@@ -48,13 +48,8 @@
          <v-card>
           <v-card-title>Pump status</v-card-title>
           <v-card-subtitle>
-            Reported state
-            <span class="green--text" v-if="thingShadow.reported.pumpState"
-              >ON</span
-            >
-            <span class="red--text" v-if="!thingShadow.reported.pumpState"
-              >OFF</span
-            >
+            Reported state:
+            <span>{{ thingShadow.reported.moistureThreshold}}</span>
           </v-card-subtitle>
 
           <v-card-actions>
