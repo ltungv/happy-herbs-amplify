@@ -9,6 +9,7 @@ export const onCreateSensorsMeasurement = /* GraphQL */ `
       luxBH1750
       temperature
       humidity
+      moisture
       createdAt
       updatedAt
     }
@@ -22,6 +23,7 @@ export const onUpdateSensorsMeasurement = /* GraphQL */ `
       luxBH1750
       temperature
       humidity
+      moisture
       createdAt
       updatedAt
     }
@@ -35,6 +37,7 @@ export const onDeleteSensorsMeasurement = /* GraphQL */ `
       luxBH1750
       temperature
       humidity
+      moisture
       createdAt
       updatedAt
     }
