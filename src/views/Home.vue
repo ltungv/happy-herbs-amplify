@@ -1,8 +1,22 @@
 <template>
-  <v-container fluid v-if="!isLoadingInitialSensorsMeasurements">
+  <v-container>
+    <v-select
+      solo
+      class="pa-4 mr-16"
+      v-model="selectedTimeInterval"
+      :items="timeIntervals"
+      label="Time interval"
+      @change="populateSensorsMeasurements()"
+    ></v-select>
+    <v-progress-linear
+      v-if="isLoadingChartsData"
+      indeterminate
+    ></v-progress-linear>
     <template v-for="{ thingName, ...sensors } in this.sensorsChartData">
-      <span :key="thingName" class="pa-2 text-h4">{{ thingName }} </span>
-      <v-row :key="thingName" class="pa-4">
+      <span v-if="!isLoadingChartsData" :key="thingName" class="pa-2 text-h4"
+        >{{ thingName }}
+      </span>
+      <v-row v-if="!isLoadingChartsData" :key="thingName" class="pa-4">
         <v-col>
           <SimpleLineChart
             :width="200"
@@ -38,7 +52,6 @@
       </v-row>
     </template>
   </v-container>
-  <v-progress-linear v-else indeterminate></v-progress-linear>
 </template>
 
 <script>
@@ -52,23 +65,36 @@ export default {
   data() {
     return {
       intervalLoadSensorsMeasurements: undefined,
-      isLoadingInitialSensorsMeasurements: true,
+      isLoadingChartsData: true,
       // sensorsMeasurements contains measured valued of all the sensors in every existing MCUs
       sensorsMeasurements: [],
-      sensorsChartOpts: {
-        responsive: false,
-        maintainAspectRatio: false,
-        scales: {
-          xAxes: [
-            {
-              type: "time",
-              time: {
-                unit: "minute"
-              }
-            }
-          ]
+      selectedTimeInterval: {
+        interval: 24 * 60 * 60,
+        timeScale: "hour"
+      },
+      timeIntervals: [
+        {
+          text: "1 day",
+          value: {
+            interval: 24 * 60 * 60,
+            timeScale: "hour"
+          }
+        },
+        {
+          text: "1 week",
+          value: {
+            interval: 7 * 24 * 60 * 60,
+            timeScale: "day"
+          }
+        },
+        {
+          text: "1 month",
+          value: {
+            interval: 30 * 24 * 60 * 60,
+            timeScale: "week"
+          }
         }
-      }
+      ]
     };
   },
   computed: {
@@ -123,7 +149,22 @@ export default {
         };
       });
     },
-
+    sensorsChartOpts() {
+      return {
+        responsive: false,
+        maintainAspectRatio: false,
+        scales: {
+          xAxes: [
+            {
+              type: "time",
+              time: {
+                unit: this.selectedTimeInterval.timeScale
+              }
+            }
+          ]
+        }
+      };
+    },
     /**
      * Information about all the existing MCUs
      */
@@ -136,8 +177,7 @@ export default {
      * Wait for 3 seconds and query the data using GraphQL for sensors' measurements
      */
     setTimeout(async () => {
-      await this.populateSensorsMeasurements();
-      this.isLoadingInitialSensorsMeasurements = false;
+      this.populateSensorsMeasurements();
     }, 3000);
 
     /**
@@ -156,6 +196,7 @@ export default {
      * The data is filter for a range of time up until now
      */
     async populateSensorsMeasurements() {
+      this.isLoadingChartsData = true;
       const currentTimestamp = Math.round(new Date().getTime() / 1000);
       try {
         const responses = await Promise.all(
@@ -164,7 +205,7 @@ export default {
               graphqlOperation(listSensorsMeasurements, {
                 thingsName: thingName,
                 timestamp: {
-                  ge: currentTimestamp - 24 * 60 * 60 // 1 DAY
+                  ge: currentTimestamp - this.selectedTimeInterval.interval
                 },
                 sortDirection: "DESC" // LATEST FIRST
               })
@@ -177,6 +218,7 @@ export default {
       } catch (err) {
         console.log(err);
       }
+      this.isLoadingChartsData = false;
     }
   }
 };
