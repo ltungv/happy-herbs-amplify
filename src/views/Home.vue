@@ -1,18 +1,42 @@
 <template>
   <v-container fluid v-if="!isLoadingInitialSensorsMeasurements">
-    <v-row
-      v-for="{ thingName, lightMeter } in this.sensorsChartData"
-      :key="thingName"
-    >
-      <v-col>
-        <SimpleLineChart
-          :width="420"
-          :height="420"
-          :chartData="lightMeter"
-          :chartOptions="sensorsChartOpts"
-        ></SimpleLineChart>
-      </v-col>
-    </v-row>
+    <template v-for="{ thingName, ...sensors } in this.sensorsChartData">
+      <span :key="thingName" class="pa-2 text-h4">{{ thingName }} </span>
+      <v-row :key="thingName" class="pa-4">
+        <v-col>
+          <SimpleLineChart
+            :width="200"
+            :height="200"
+            :chartData="sensors.lightMeter"
+            :chartOptions="sensorsChartOpts"
+          ></SimpleLineChart>
+        </v-col>
+        <v-col>
+          <SimpleLineChart
+            :width="200"
+            :height="200"
+            :chartData="sensors.temperature"
+            :chartOptions="sensorsChartOpts"
+          ></SimpleLineChart>
+        </v-col>
+        <v-col>
+          <SimpleLineChart
+            :width="200"
+            :height="200"
+            :chartData="sensors.humidity"
+            :chartOptions="sensorsChartOpts"
+          ></SimpleLineChart>
+        </v-col>
+        <v-col>
+          <SimpleLineChart
+            :width="200"
+            :height="200"
+            :chartData="sensors.moisture"
+            :chartOptions="sensorsChartOpts"
+          ></SimpleLineChart>
+        </v-col>
+      </v-row>
+    </template>
   </v-container>
   <v-progress-linear v-else indeterminate></v-progress-linear>
 </template>
@@ -52,19 +76,52 @@ export default {
      * Map the sensors' measurements received into datasets that can be read by chartjs
      */
     sensorsChartData() {
-      return this.sensorsMeasurements.map((measurements, thingIdx) => ({
-        thingName: this.things[thingIdx].thingName,
-        lightMeter: {
-          labels: measurements.map(m => new Date(m.timestamp * 1000)),
-          datasets: [
-            {
-              label: "BH1750 (lux)",
-              backgroundColor: "yellow",
-              data: measurements.map(m => m.luxBH1750)
-            }
-          ]
-        }
-      }));
+      return this.sensorsMeasurements.map((measurements, thingIdx) => {
+        const labels = measurements.map(m => new Date(m.timestamp * 1000));
+        return {
+          thingName: this.things[thingIdx].thingName,
+          lightMeter: {
+            labels,
+            datasets: [
+              {
+                label: "BH1750 (lx)",
+                backgroundColor: "yellow",
+                data: measurements.map(m => m.luxBH1750)
+              }
+            ]
+          },
+          temperature: {
+            labels,
+            datasets: [
+              {
+                label: "Temperature (\u00B0C)",
+                backgroundColor: "red",
+                data: measurements.map(m => m.temperature)
+              }
+            ]
+          },
+          humidity: {
+            labels,
+            datasets: [
+              {
+                label: "Air humidity (%)",
+                backgroundColor: "blue",
+                data: measurements.map(m => m.humidity)
+              }
+            ]
+          },
+          moisture: {
+            labels,
+            datasets: [
+              {
+                label: "Ground moisture (%)",
+                backgroundColor: "brown",
+                data: measurements.map(m => m.moisture)
+              }
+            ]
+          }
+        };
+      });
     },
 
     /**
